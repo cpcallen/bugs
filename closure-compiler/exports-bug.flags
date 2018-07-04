@@ -1,0 +1,3 @@
+-O=ADVANCED_OPTIMIZATIONS
+--process_common_js_modules
+exports-bug.js
