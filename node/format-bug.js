@@ -1,6 +1,8 @@
 /* The documentation says that util.format('%s', obj) will call
  * String(obj) iff obj has a user-defined .toString method, but in
- * v12.12.0 it only calls String(obj)
+ * v12.12.0 it only calls String(obj) if either obj or
+ * obj.constructor.prototype has an own property named toString,
+ * causing inherited toString implementations to be ignored.
  * 
  * Submitted as https://github.com/nodejs/node/issues/30333
  */
