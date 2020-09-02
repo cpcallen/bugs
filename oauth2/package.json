@@ -4,7 +4,7 @@
   "description": "Repro for https://github.com/googleapis/google-auth-library-nodejs/issues/636",
   "main": "getToken-no-reject.js",
   "dependencies": {
-    "googleapis": "^20.0.1"
+    "googleapis": "^39.1.0"
   },
   "devDependencies": {},
   "scripts": {
