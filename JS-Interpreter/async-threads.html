@@ -1,0 +1,98 @@
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>JS-Interpreter Thread Demo</title>
+  <script src="https://neil.fraser.name/software/JS-Interpreter/acorn.js"></script>
+  <script src="https://neil.fraser.name/software/JS-Interpreter/interpreter.js"></script>
+  <script>
+    function initAlert(interpreter, globalObject) {
+      var wrapper = function(text) {
+        console.log(text);
+        return;
+      };
+      interpreter.setProperty(globalObject, 'alert',
+          interpreter.createNativeFunction(wrapper));
+
+      var wrapper = function(time, callback){
+          console.log('start');
+          setTimeout(function(){
+            console.log('end');
+            callback('hit');
+          }, time);
+      };
+      interpreter.setProperty(globalObject, 'await',
+          interpreter.createAsyncFunction(wrapper));
+    }
+
+    // Create an interpreter whose global scope will be the cross-thread global.
+    var myInterpreter = new Interpreter('', initAlert);
+    var threads = [];
+    var runInterval;
+
+    function parseButton(n) {
+      var code = document.getElementById('code' + n).value;
+      var intrp = new Interpreter('');
+      // Replace this thread's global scope with the cross-thread global.
+      intrp.stateStack[0].scope = myInterpreter.globalScope;
+      intrp.appendCode(code);
+      threads[n] = intrp.stateStack;
+    }
+
+    function runButton(n) {
+        parseButton(1);
+        parseButton(2);
+
+        if(runInterval) clearInterval(runInterval)
+        runInterval = setInterval(run, 5);
+        var threadFinishedStatus = [ false, false ];
+
+        function run(){
+
+            for(let i =1; i<=2; i++){
+                myInterpreter.stateStack = threads[i];
+                try {
+                    var ok = myInterpreter.step();
+                    threadFinishedStatus[ i - 1 ] = false;
+                } finally {
+                    if (!ok) {
+                      threadFinishedStatus[ i - 1 ] = true;
+                    }
+                }
+            }
+            if (!threadFinishedStatus.includes(false)) {
+                clearInterval( runInterval );
+                runInterval = null;
+                console.log('finished');
+            }
+        }
+    }
+
+  </script>
+</head>
+<body>
+  <table style="width: 100%;">
+    <tr>
+      <td>
+        Thread #1
+      </td>
+      <td>
+        Thread #2
+      </td>
+    </tr>
+    <tr>
+      <td>
+  <textarea id="code1" style="height: 6em; width: 100%;">
+  await(2000);
+  </textarea>
+      </td>
+      <td>
+  <textarea id="code2" style="height: 6em; width: 100%;">
+    await(2000);
+  </textarea>
+      </td>
+    </tr>
+  </table>
+
+  <button onclick="runButton()" id="runButton">Run</button>
+</body>
+</html>
